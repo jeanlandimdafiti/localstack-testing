@@ -8,7 +8,6 @@ packages = [{include = "localstack_testing"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-localstack = "^2.1.0"
 
 
 [build-system]
