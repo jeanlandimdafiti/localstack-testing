@@ -1,0 +1,38 @@
+{
+    "Comment": "A state machine.",
+    "StartAt": "Select Audience",
+    "States": {
+        "Select Audience": {
+            "Type": "Task",
+            "Resource": "${SelectAudienceArn}",
+            "InputPath": "$",
+            "Next": "Prepare Braze Messages"
+        },
+        "Prepare Braze Messages": {
+            "Type": "Task",
+            "Resource": "${PrepareBrazeMessagesArn}",
+            "Next": "Process Map Messages"
+        },
+        "Process Map Messages": {
+            "Type": "Map",
+            "ItemsPath": "$",
+            "Iterator": {
+                "StartAt": "Send SQS Messages",
+                "States": {
+                    "Send SQS Messages": {
+                        "Type": "Task",
+                        "Resource":"arn:aws:states:::sqs:sendMessage.waitForTaskToken",
+                        "Parameters": {
+                            "QueueUrl": "https://sqs.us-east-1.amazonaws.com/678591175058/BrazeMessageToCanvasTriggerSend",
+                            "MessageBody": {
+                                "Input.$": "$",
+                                "TaskToken.$": "$$.Task.Token"
+                            }
+                        }
+                    }
+                }
+            },
+            "End": true
+        }
+    }
+}

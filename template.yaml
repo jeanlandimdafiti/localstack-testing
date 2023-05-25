@@ -1,0 +1,170 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  campaign-segmentation-workflow
+  Sample SAM Template for Python step functions workflow.
+Parameters:
+  Env:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: environment
+    Description: |
+      Environment in which the application will be deployed. Allowed values [local, qa, live]]
+Mappings:
+  VpcConfigMapping:
+    local:
+      SecurityGroupIds: []
+      SubnetIds: []
+    qa:
+      SecurityGroupIds:
+        - sg-03f283e3f37b18d4e
+        - sg-0c5ee036f6327d50d
+      SubnetIds:
+        - subnet-0fd461b1b954b7d2c
+        - subnet-caa4ba83
+    live:
+      SecurityGroupIds: []
+      SubnetIds: []
+Globals:
+  Function:
+    Timeout: 10
+    MemorySize: 128
+    VpcConfig:
+      SecurityGroupIds: !FindInMap
+        - VpcConfigMapping
+        - !Ref Env
+        - SecurityGroupIds
+      SubnetIds: !FindInMap
+        - VpcConfigMapping
+        - !Ref Env
+        - SubnetIds
+    Environment:
+      Variables:
+        ENVIRONMENT: !Ref Env
+        VAULT_URL: '{{resolve:secretsmanager:vault:SecretString:url}}'
+        VAULT_TOKEN: '{{resolve:secretsmanager:vault:SecretString:token}}'
+        VAULT_MOUNT_POINT: '{{resolve:secretsmanager:vault:SecretString:mount-point}}'
+Resources:
+  StateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Definition:
+        StartAt: Start
+        States:
+          Start:
+            Type: Pass
+            Next: TaskState
+          TaskState:
+            Type: Task
+            Next: Done
+          Done:
+            Type: Pass
+            End: true
+      Events:
+        ScheduleDafitiBR:
+          Type: Schedule
+          Properties:
+            Description: Schedule to run the machine every 10 minutes to Dafiti Brasil
+            Enabled: true
+            Schedule: rate(10 minutes)
+            Input: '{ "campaign": "abandoned_cart_general", "country": "BR", "store": "DAFITI", "visit_time_range": { "start": 30, "end": 20, }, "braze": { "canvas_id": "XPTO", "objects_limit": 50 } }'
+        ScheduleDafitiAR:
+          Type: Schedule
+          Properties:
+            Description: Schedule to run the machine every 10 minutes to Dafiti Argentina
+            Enabled: false
+            Schedule: rate(10 minutes)
+            Input: '{ "campaign": "abandoned_cart_general", "country": "AR", "store": "DAFITI", "visit_time_range": { "start": 30, "end": 20, }, "braze": { "canvas_id": "XPTO", "objects_limit": 50 } }'
+        ScheduleDafitiCH:
+          Type: Schedule
+          Properties:
+            Description: Schedule to run the machine every 10 minutes to Dafiti Chile
+            Enabled: false
+            Schedule: rate(10 minutes)
+            Input: '{ "campaign": "abandoned_cart_general", "country": "CH", "store": "DAFITI", "visit_time_range": { "start": 30, "end": 20, }, "braze": { "canvas_id": "XPTO", "objects_limit": 50 } }'
+        ScheduleDafitiCO:
+          Type: Schedule
+          Properties:
+            Description: Schedule to run the machine every 10 minutes to Dafiti Colombia
+            Enabled: false
+            Schedule: rate(10 minutes)
+            Input: '{ "campaign": "abandoned_cart_general", "country": "CO", "store": "DAFITI", "visit_time_range": { "start": 30, "end": 20, }, "braze": { "canvas_id": "XPTO", "objects_limit": 50 } }'
+        ScheduleTricae:
+          Type: Schedule
+          Properties:
+            Description: Schedule to run the machine every 10 minutes to Tricae
+            Enabled: false
+            Schedule: rate(10 minutes)
+            Input: '{ "campaign": "abandoned_cart_general", "store": "TRICAE", "visit_time_range": { "start": 30, "end": 20, }, "braze": { "canvas_id": "XPTO", "objects_limit": 50 } }'
+        ScheduleKanui:
+          Type: Schedule
+          Properties:
+            Description: Schedule to run the machine every 10 minutes to Kanui
+            Enabled: false
+            Schedule: rate(10 minutes)
+            Input: '{ "campaign": "abandoned_cart_general", "store": "KANUI", "visit_time_range": { "start": 30, "end": 20, }, "braze": { "canvas_id": "XPTO", "objects_limit": 50 } }'
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt StateMachineLogGroup.Arn
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - logs:CreateLogDelivery
+                - logs:GetLogDelivery
+                - logs:UpdateLogDelivery
+                - logs:DeleteLogDelivery
+                - logs:ListLogDeliveries
+                - logs:PutResourcePolicy
+                - logs:DescribeResourcePolicies
+                - logs:DescribeLogGroups
+              Resource: '*'
+        - LambdaInvokePolicy:
+            FunctionName: !Ref Function
+        - LambdaInvokePolicy:
+            FunctionName: !Ref Function2
+      Tracing:
+        Enabled: true
+      Type: STANDARD
+  StateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub
+        - /aws/vendedlogs/states/${AWS::StackName}-${ResourceId}-Logs
+        - ResourceId: StateMachine
+  Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: !Sub
+        - Stack ${AWS::StackName} Function ${ResourceName}
+        - ResourceName: Function
+      CodeUri: src/Function
+      Handler: index.handler
+      Runtime: nodejs18.x
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+  FunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${Function}
+  Function2:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: !Sub
+        - Stack ${AWS::StackName} Function ${ResourceName}
+        - ResourceName: Function2
+      CodeUri: src/Function2
+      Handler: index.handler
+      Runtime: nodejs18.x
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+  Function2LogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${Function2}

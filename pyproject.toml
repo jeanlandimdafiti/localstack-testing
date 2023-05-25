@@ -9,6 +9,7 @@ packages = [{include = "localstack_testing"}]
 [tool.poetry.dependencies]
 python = "^3.10"
 awscli-local = "^0.20"
+aws-sam-cli-local = "^1.67.0"
 
 
 [build-system]

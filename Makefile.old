@@ -1,0 +1,21 @@
+stack := $(shell basename $(shell pwd))
+env ?= local
+
+build:
+	sam build --use-container
+
+validate:
+	sam validate
+
+SelectAudience:
+	sam local invoke SelectAudience \
+	--env-vars envs/$(env).json \
+	--event events/event_dafiti_br.json
+
+PrepareBrazeMessages:
+	sam local invoke PrepareBrazeMessages \
+	--env-vars envs/$(env).json \
+	--event events/event_prepare_braze_messages.json
+
+test:
+	python3.9 -m venv test-env; source test-env/bin/activate; cd tests/unit/functions/prepare_braze_messages; pip install -r requirements.txt; pytest

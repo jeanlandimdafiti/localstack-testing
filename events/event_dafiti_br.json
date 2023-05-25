@@ -1,0 +1,12 @@
+{
+  "country": "BR",
+  "store": "DAFITI",
+  "visit_time_range": {
+    "start": 30,
+    "end": 20
+  },
+  "braze": {
+    "canvas_id": "XPTO",
+    "objects_limit": 50
+  }
+}

@@ -1,0 +1,16 @@
+{
+    "Comment": "A state machine.",
+    "StartAt": "Step 1",
+    "States": {
+        "Step 1": {
+            "Type": "Task",
+            "Resource": "${Step1Arn}",
+            "Next": "Wait"
+        },
+        "Wait": {
+            "Type": "Wait",
+            "End": true,
+            "SecondsPath": "$.delay_time"
+        }
+    }
+}
