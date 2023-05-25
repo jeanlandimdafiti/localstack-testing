@@ -10,6 +10,7 @@ packages = [{include = "localstack_testing"}]
 python = "^3.10"
 awscli-local = "^0.20"
 aws-sam-cli-local = "^1.67.0"
+cfn-lint = "^0.77.5"
 
 
 [build-system]

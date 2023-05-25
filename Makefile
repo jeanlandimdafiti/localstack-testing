@@ -13,4 +13,5 @@ build:
 
 deploy:          ## Deploy the app
 	echo "Deploying Serverless app to local environment"; \
-	samlocal deploy --template-file template.yaml --stack-name campaign-segmentation-workflow --resolve-s3 --debug --capabilities CAPABILITY_IAM
+	samlocal deploy --template-file template.yaml --stack-name campaign-segmentation-workflow --resolve-s3 --debug --capabilities CAPABILITY_IAM 
+	
