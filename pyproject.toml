@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "localstack-testing"
+version = "0.1.0"
+description = ""
+authors = ["Jean Carlos dos Santos Landim <jean.landim@026464-sp-nb.dafiti.local>"]
+readme = "README.md"
+packages = [{include = "localstack_testing"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+localstack = "^2.1.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
