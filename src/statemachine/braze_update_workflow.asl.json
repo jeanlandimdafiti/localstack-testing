@@ -1,0 +1,61 @@
+{
+    "Comment": "Braze Update Workflow.",
+    "StartAt": "GetBrazeRateLimits",
+    "States": {
+        "GetBrazeRateLimits": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::dynamodb:getItem",
+            "Parameters": {
+                "TableName": "BrazeRateLimits",
+                "Key":{
+                    "RequestType": {"S": "$.request_type"}
+                }
+            },
+            "ResultPath": "$.RateLimit",
+            "Next": "CheckRateLimits"
+        },
+        "CheckRateLimits": {
+            "Type": "Choice",
+            "Choices": [
+                {
+                    "Variable": "$.RateLimit.Item.RequestRemaining.N",
+                    "NumericEquals": 0,
+                    "Next": "Wait" 
+                }
+            ],
+            "Default": "BrazeSender"
+        },
+        "Wait": {
+            "Type": "Wait",
+            "Seconds": 60,
+            "Next": "BrazeSender"
+        },
+        "BrazeSender": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+                "FunctionName": "BrazeSender",
+                "Payload": {
+                    "endpoint_name": "$.request_type" 
+                }
+            },
+            "ResultPath": "$.lambda_response", 
+            "Next": "PutBrazeRateLimits"
+        },
+        "PutBrazeRateLimits": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::dynamodb:putItem",
+            "Parameters": {
+                "TableName": "BrazeRateLimits",
+                "Item": {
+                    "RequestType": {"S": "$.lambda_response.request_type" },
+                    "RequestLimit": {"S": "$.lambda_response.request_limit"},
+                    "RequestRemaining": {"S": "$.lambda_response.request_remaining"},
+                    "RequestReset": {"S": "$.lambda_response.request_reset"}
+                }
+
+            },
+            "End": true
+        }
+    }
+}

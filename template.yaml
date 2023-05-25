@@ -1,18 +1,18 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  campaign-segmentation-workflow
+  braze-update-workflow
 
-  Sample SAM Template for Python step functions workflow.
+  Sample SAM Template for Python step functions workflow
 
 Parameters:
   Env:
-#    Type: AWS::SSM::Parameter::Value<String>
+    #Type: AWS::SSM::Parameter::Value<String>
     Type: String
     Default: local 
     Description: >
-       Environment in which the application will be deployed.
-       Allowed values [local, qa, live]]
+      Environment in which the application will be deployed.
+      Allowed values [local, qa, live]]
 
 Mappings:
   VpcConfigMapping:
@@ -30,168 +30,158 @@ Mappings:
       SecurityGroupIds: []
       SubnetIds: []
 
-Globals:
-  Function:
-    Timeout: 10
-    MemorySize: 128
-    VpcConfig:
-      SecurityGroupIds: !FindInMap [ VpcConfigMapping, !Ref Env, SecurityGroupIds ]
-      SubnetIds: !FindInMap [ VpcConfigMapping, !Ref Env, SubnetIds ]
-    Environment:
-      Variables:
-        ENVIRONMENT: !Ref Env #'{{resolve:ssm:environment}}'
-#        VAULT_URL: '{{resolve:secretsmanager:vault:SecretString:url}}'
-#        VAULT_TOKEN: '{{resolve:secretsmanager:vault:SecretString:token}}'
-#        VAULT_MOUNT_POINT: '{{resolve:secretsmanager:vault:SecretString:mount-point}}'
-
 Resources:
   StateMachine:
     Type: AWS::Serverless::StateMachine
     Properties:
-      Name: campaign-segmentation-workflow
-      DefinitionUri: src/statemachine/abandoned_cart_workflow.asl.json
+      Name: braze-update-workflow 
+      DefinitionUri: src/statemachine/braze_update_workflow.asl.json
       DefinitionSubstitutions:
-        PrepareBrazeMessagesArn: !GetAtt PrepareBrazeMessages.Arn
-        SelectAudienceArn: !GetAtt SelectAudience.Arn
-      Events:
-        ScheduleDafitiBR:
-          Type: Schedule
-          Properties:
-            Description: Schedule to run the machine every 10 minutes to Dafiti Brasil
-            Enabled: True
-            Schedule: "rate(10 minutes)"
-            Input:
-              '{
-                "campaign": "abandoned_cart_general",
-                "country": "BR",
-                "store": "DAFITI",
-                "visit_time_range": {
-                  "start": 30,
-                  "end": 20,
-                },
-                "braze": {
-                  "canvas_id": "XPTO",
-                  "objects_limit": 50
-                }
-              }'
-        ScheduleDafitiAR:
-          Type: Schedule
-          Properties:
-            Description: Schedule to run the machine every 10 minutes to Dafiti Argentina
-            Enabled: False
-            Schedule: "rate(10 minutes)"
-            Input:
-              '{
-                "campaign": "abandoned_cart_general",
-                "country": "AR",
-                "store": "DAFITI",
-                "visit_time_range": {
-                  "start": 30,
-                  "end": 20,
-                },
-                "braze": {
-                  "canvas_id": "XPTO",
-                  "objects_limit": 50
-                }
-              }'
-        ScheduleDafitiCH:
-          Type: Schedule
-          Properties:
-            Description: Schedule to run the machine every 10 minutes to Dafiti Chile
-            Enabled: False
-            Schedule: "rate(10 minutes)"
-            Input:
-              '{
-                "campaign": "abandoned_cart_general",
-                "country": "CH",
-                "store": "DAFITI",
-                "visit_time_range": {
-                  "start": 30,
-                  "end": 20,
-                },
-                "braze": {
-                  "canvas_id": "XPTO",
-                  "objects_limit": 50
-                }
-              }'
-        ScheduleDafitiCO:
-          Type: Schedule
-          Properties:
-            Description: Schedule to run the machine every 10 minutes to Dafiti Colombia
-            Enabled: False
-            Schedule: "rate(10 minutes)"
-            Input:
-              '{
-                  "campaign": "abandoned_cart_general",
-                  "country": "CO",
-                  "store": "DAFITI",
-                  "visit_time_range": {
-                    "start": 30,
-                    "end": 20,
-                  },
-                  "braze": {
-                    "canvas_id": "XPTO",
-                    "objects_limit": 50
-                  }
-                }'
-        ScheduleTricae:
-          Type: Schedule
-          Properties:
-            Description: Schedule to run the machine every 10 minutes to Tricae
-            Enabled: False
-            Schedule: "rate(10 minutes)"
-            Input:
-              '{
-                "campaign": "abandoned_cart_general",
-                "store": "TRICAE",
-                "visit_time_range": {
-                  "start": 30,
-                  "end": 20,
-                },
-                "braze": {
-                  "canvas_id": "XPTO",
-                  "objects_limit": 50
-                }
-              }'
-        ScheduleKanui:
-          Type: Schedule
-          Properties:
-            Description: Schedule to run the machine every 10 minutes to Kanui
-            Enabled: False
-            Schedule: "rate(10 minutes)"
-            Input:
-              '{
-                "campaign": "abandoned_cart_general",
-                "store": "KANUI",
-                "visit_time_range": {
-                  "start": 30,
-                  "end": 20,
-                },
-                "braze": {
-                  "canvas_id": "XPTO",
-                  "objects_limit": 50
-                }
-              }'
+        BrazeSenderArn: !GetAtt BrazeSender.Arn
       Policies:
         - LambdaInvokePolicy:
-            FunctionName: !Ref PrepareBrazeMessages
-        - LambdaInvokePolicy:
-            FunctionName: !Ref SelectAudience
+            FunctionName: !Ref BrazeSender
+        - DynamoDBCrudPolicy:
+            TableName: !Ref BrazeRateLimitsTable
 
-  PrepareBrazeMessages:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/functions/prepare_braze_messages/
-      Handler: app.lambda_handler
-      Runtime: python3.9
-      Architectures:
-        - x86_64
+  BrazeSender:
+      Type: AWS::Serverless::Function # More info about Function Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+      Properties:
+        CodeUri: src/functions/braze_sender
+        Handler: app.lambda_handler
+        Runtime: python3.9
+        Architectures:
+          - x86_64
+        Timeout: 120
+        VpcConfig:
+          SecurityGroupIds: !FindInMap [ VpcConfigMapping, !Ref Env, SecurityGroupIds ]
+          SubnetIds: !FindInMap [ VpcConfigMapping, !Ref Env, SubnetIds ]
+        Environment:
+          Variables:
+            ENVIRONMENT: !Ref Env #'{{resolve:ssm:environment}}'
+            # VAULT_URL: '{{resolve:secretsmanager:vault:SecretString:url}}'
+            # VAULT_TOKEN: '{{resolve:secretsmanager:vault:SecretString:token}}'
+            # VAULT_MOUNT_POINT: '{{resolve:secretsmanager:vault:SecretString:mount-point}}'
 
-  SelectAudience:
-    Type: AWS::Serverless::Function
+  BrazeRateLimitsTable:
+    Type: AWS::DynamoDB::Table
     Properties:
-      CodeUri: src/functions/select-audience/
-      Handler: app.lambda_handler
-      Runtime: python3.9
-      Architectures:
-        - x86_64
+      TableName: BrazeRateLimitsTable
+      AttributeDefinitions:
+        - AttributeName: RequestType
+          AttributeType: S
+      KeySchema:
+        - AttributeName: RequestType
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: RateLimitReset
+        Enabled: true
+
+  CanvasTriggerSendQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: CanvasTriggerSendQueue
+
+  TrackUsersQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: TrackUsersQueue
+
+  NewUserAliasQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: CanvasTriggerSendQueue
+
+  EventBridgePipesRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - pipes.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: ReadCanvasTriggerSendQueue
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'sqs:ReceiveMessage'
+                  - 'sqs:DeleteMessage'
+                  - 'sqs:GetQueueAttributes'
+                Resource: !GetAtt CanvasTriggerSendQueue.Arn
+        - PolicyName: ReadTrackUsersQueue
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'sqs:ReceiveMessage'
+                  - 'sqs:DeleteMessage'
+                  - 'sqs:GetQueueAttributes'
+                Resource: !GetAtt TrackUsersQueue.Arn
+        - PolicyName: ReadNewUserAliasQueue
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'sqs:ReceiveMessage'
+                  - 'sqs:DeleteMessage'
+                  - 'sqs:GetQueueAttributes'
+                Resource: !GetAtt NewUserAliasQueue.Arn
+        - PolicyName: ExecuteStepFunction
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'states:StartExecution'
+                Resource: !Ref StateMachine
+
+  CanvasTriggerSendPipe:
+    Type: AWS::Pipes::Pipe
+    Properties:
+      Name: CanvasTriggerSendPipe
+      RoleArn: !GetAtt EventBridgePipesRole.Arn
+      Source: !GetAtt CanvasTriggerSendQueue.Arn
+      SourceParameters:
+        SqsQueueParameters:
+          BatchSize: 1
+      Target: !Ref StateMachine
+      TargetParameters:
+        StepFunctionStateMachineParameters:
+          InvocationType: FIRE_AND_FORGET
+
+  TrackUsersPipe:
+    Type: AWS::Pipes::Pipe
+    Properties:
+      Name: TrackUsersPipe
+      RoleArn: !GetAtt EventBridgePipesRole.Arn
+      Source: !GetAtt TrackUsersQueue.Arn
+      SourceParameters:
+        SqsQueueParameters:
+          BatchSize: 1
+      Target: !Ref StateMachine
+      TargetParameters:
+        StepFunctionStateMachineParameters:
+          InvocationType: FIRE_AND_FORGET
+
+  NewUserAliasPipe:
+    Type: AWS::Pipes::Pipe
+    Properties:
+      Name: NewUserAliasPipe
+      RoleArn: !GetAtt EventBridgePipesRole.Arn
+      Source: !GetAtt NewUserAliasQueue.Arn
+      SourceParameters:
+        SqsQueueParameters:
+          BatchSize: 1
+      Target: !Ref StateMachine
+      TargetParameters:
+        StepFunctionStateMachineParameters:
+          InvocationType: FIRE_AND_FORGET
