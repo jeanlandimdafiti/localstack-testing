@@ -8,6 +8,7 @@ packages = [{include = "localstack_testing"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
+awscli-local = "^0.20"
 
 
 [build-system]
