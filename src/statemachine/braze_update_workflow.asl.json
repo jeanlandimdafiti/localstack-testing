@@ -18,9 +18,18 @@
             "Type": "Choice",
             "Choices": [
                 {
-                    "Variable": "$.RateLimit.Item.RequestRemaining.N",
-                    "NumericEquals": 0,
-                    "Next": "Wait" 
+                  "And": [
+                            {
+                               "Variable": "$.RateLimit.Item.RequestRemaining.N",
+                               "IsPresent": true
+
+                            },
+                            {
+                                "Variable": "$.RateLimit.Item.RequestRemaining.N",
+                                "NumericEquals": 0
+                            }
+                  ],
+                  "Next": "Wait" 
                 }
             ],
             "Default": "BrazeSender"
