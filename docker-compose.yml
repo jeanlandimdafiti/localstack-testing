@@ -10,6 +10,7 @@ services:
     environment:
       - SERVICES=cloudformation,sqs,dynamodb 
       - DEBUG=1
+      - LS_LOG=trace
       - DOCKER_HOST=unix:///var/run/docker.sock
     volumes:
       - "localstack:/var/lib/localstack"
