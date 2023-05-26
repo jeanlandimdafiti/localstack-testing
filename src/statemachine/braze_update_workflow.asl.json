@@ -43,7 +43,7 @@
             "Type": "Task",
             "Resource": "arn:aws:states:::lambda:invoke",
             "Parameters": {
-                "FunctionName": "BrazeSender",
+                "FunctionName": "${BrazeSender}",
                 "Payload": {
                     "endpoint_name": "$.request_type" 
                 }

@@ -8,10 +8,15 @@ usage:           ## Show this help
 start_localstack: ## Start Localstack
 	docker-compose up -d --force-recreate
 
-build:
+iac_lint: ## Verify IaC
+	cfn-lint template.yaml
+
+build: ## Build
 	samlocal build --use-container
 
 deploy:          ## Deploy the app
 	echo "Deploying Serverless app to local environment"; \
 	samlocal deploy --template-file template.yaml --stack-name braze-update-workflow --resolve-s3 --debug --capabilities CAPABILITY_IAM 
-	
+
+
+full_deploy: start_localstack iac_lint build deploy

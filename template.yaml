@@ -38,11 +38,12 @@ Resources:
       DefinitionUri: src/statemachine/braze_update_workflow.asl.json
       DefinitionSubstitutions:
         BrazeSenderArn: !GetAtt BrazeSender.Arn
+        BrazeSender: !Ref BrazeSender
       Policies:
         - LambdaInvokePolicy:
             FunctionName: !Ref BrazeSender
         - DynamoDBCrudPolicy:
-            TableName: !Ref BrazeRateLimitsTable
+            TableName: !Ref BrazeRateLimits
 
   BrazeSender:
       Type: AWS::Serverless::Function # More info about Function Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
@@ -63,7 +64,7 @@ Resources:
             # VAULT_TOKEN: '{{resolve:secretsmanager:vault:SecretString:token}}'
             # VAULT_MOUNT_POINT: '{{resolve:secretsmanager:vault:SecretString:mount-point}}'
 
-  BrazeRateLimitsTable:
+  BrazeRateLimits:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: BrazeRateLimits
