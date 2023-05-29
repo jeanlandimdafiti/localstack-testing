@@ -45,7 +45,8 @@
             "Parameters": {
                 "FunctionName": "${BrazeSender}",
                 "Payload": {
-                    "endpoint_name": "canvas_trigger_send" 
+                    "endpoint_name": "$.request_type",
+                    "message_body": "$.message_body"
                 }
             },
             "ResultPath": "$.lambda_response", 

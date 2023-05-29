@@ -59,9 +59,9 @@ Resources:
         Environment:
           Variables:
             ENVIRONMENT: !Ref Env # From '{{resolve:ssm:environment}}'
-            VAULT_URL: '{{resolve:secretsmanager:vault:SecretString:url}}'
-            VAULT_TOKEN: '{{resolve:secretsmanager:vault:SecretString:token}}'
-            VAULT_MOUNT_POINT: '{{resolve:secretsmanager:vault:SecretString:mount-point}}'
+           # VAULT_URL: '{{resolve:secretsmanager:vault:SecretString:url}}'
+           # VAULT_TOKEN: '{{resolve:secretsmanager:vault:SecretString:token}}'
+           # VAULT_MOUNT_POINT: '{{resolve:secretsmanager:vault:SecretString:mount-point}}'
 
   BrazeRateLimits:
     Type: AWS::DynamoDB::Table
@@ -80,17 +80,17 @@ Resources:
   CanvasTriggerSendQueue:
       Type: AWS::SQS::Queue
       Properties:
-        QueueName: CanvasTriggerSendQueue
+        QueueName: BrazeMessagesToCanvasTriggerSend
 
   TrackUsersQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: TrackUsersQueue
+      QueueName: BrazeMessagesToTrackUsers
 
   NewUserAliasQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: CanvasTriggerSendQueue
+      QueueName: BrazeMessagesToNewUserAlias
 
   EventBridgePipesRole:
     Type: AWS::IAM::Role

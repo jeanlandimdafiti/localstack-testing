@@ -72,9 +72,6 @@ Resources:
         Variables:
           ENVIRONMENT:
             Ref: Env
-          VAULT_URL: '{{resolve:secretsmanager:vault:SecretString:url}}'
-          VAULT_TOKEN: '{{resolve:secretsmanager:vault:SecretString:token}}'
-          VAULT_MOUNT_POINT: '{{resolve:secretsmanager:vault:SecretString:mount-point}}'
     Metadata:
       SamResourceId: BrazeSender
   BrazeRateLimits:
@@ -93,15 +90,15 @@ Resources:
   CanvasTriggerSendQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: CanvasTriggerSendQueue
+      QueueName: BrazeMessagesToCanvasTriggerSend
   TrackUsersQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: TrackUsersQueue
+      QueueName: BrazeMessagesToTrackUsers
   NewUserAliasQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: CanvasTriggerSendQueue
+      QueueName: BrazeMessagesToNewUserAlias
   EventBridgePipesRole:
     Type: AWS::IAM::Role
     Properties:
