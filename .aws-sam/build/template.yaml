@@ -7,8 +7,8 @@ Description: 'braze-update-workflow
   '
 Parameters:
   Env:
-    Type: String
-    Default: local
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: environment
     Description: 'Environment in which the application will be deployed. Allowed values
       [local, qa, live]]
 
@@ -72,6 +72,9 @@ Resources:
         Variables:
           ENVIRONMENT:
             Ref: Env
+          VAULT_URL: '{{resolve:secretsmanager:vault:SecretString:url}}'
+          VAULT_TOKEN: '{{resolve:secretsmanager:vault:SecretString:token}}'
+          VAULT_MOUNT_POINT: '{{resolve:secretsmanager:vault:SecretString:mount-point}}'
     Metadata:
       SamResourceId: BrazeSender
   BrazeRateLimits:

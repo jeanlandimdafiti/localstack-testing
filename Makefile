@@ -18,5 +18,10 @@ deploy:          ## Deploy the app
 	echo "Deploying Serverless app to local environment"; \
 	samlocal deploy --template-file template.yaml --stack-name braze-update-workflow --resolve-s3 --debug --capabilities CAPABILITY_IAM 
 
+start_state_machine:
+	awslocal stepfunctions start-execution --name braze-update-workflow --state-machine-arn arn:aws:states:us-east-1:000000000000:stateMachine:braze-update-workflow
+
+describe_state_machine:
+	awslocal stepfunctions describe-execution --execution-arn arn:aws:states:us-east-1:000000000000:execution:braze-update-workflow:braze-update-workflow
 
 full_deploy: start_localstack iac_lint build deploy

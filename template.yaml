@@ -7,9 +7,8 @@ Description: >
 
 Parameters:
   Env:
-    #Type: AWS::SSM::Parameter::Value<String>
-    Type: String
-    Default: local 
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: environment 
     Description: >
       Environment in which the application will be deployed.
       Allowed values [local, qa, live]]
@@ -59,10 +58,10 @@ Resources:
           SubnetIds: !FindInMap [ VpcConfigMapping, !Ref Env, SubnetIds ]
         Environment:
           Variables:
-            ENVIRONMENT: !Ref Env #'{{resolve:ssm:environment}}'
-            # VAULT_URL: '{{resolve:secretsmanager:vault:SecretString:url}}'
-            # VAULT_TOKEN: '{{resolve:secretsmanager:vault:SecretString:token}}'
-            # VAULT_MOUNT_POINT: '{{resolve:secretsmanager:vault:SecretString:mount-point}}'
+            ENVIRONMENT: !Ref Env # From '{{resolve:ssm:environment}}'
+            VAULT_URL: '{{resolve:secretsmanager:vault:SecretString:url}}'
+            VAULT_TOKEN: '{{resolve:secretsmanager:vault:SecretString:token}}'
+            VAULT_MOUNT_POINT: '{{resolve:secretsmanager:vault:SecretString:mount-point}}'
 
   BrazeRateLimits:
     Type: AWS::DynamoDB::Table
