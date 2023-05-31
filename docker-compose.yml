@@ -7,11 +7,8 @@ services:
     ports:
       - "127.0.0.1:4566:4566"            # LocalStack Gateway
       - "127.0.0.1:4510-4559:4510-4559"  # external services port range
-    environment:
-      - SERVICES=cloudformation,sqs,dynamodb,ssm 
-      - DEBUG=1
-      - LS_LOG=trace
-      - DOCKER_HOST=unix:///var/run/docker.sock
+    env_file:
+      - localstack-base.env
     volumes:
       - "localstack:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
